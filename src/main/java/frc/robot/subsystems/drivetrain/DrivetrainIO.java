@@ -57,7 +57,7 @@ public interface DrivetrainIO {
     public default void setSwerveRequest(SwerveRequest request) {}
 
     /** Resets the drivetrain pose to a specific pose */
-    public default void resetPose(Pose2d pose) {}
+    public void resetPose(Pose2d pose);
 
     /** Resets the drivetrain rotation to Rotation2d.kZero (forward) */
     public default void resetRotation() {}

@@ -20,7 +20,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.LinearAcceleration;
@@ -48,7 +47,7 @@ public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CAN
 
     private final Map<Integer, ModuleInputUpdater> moduleInputUpdaters = new HashMap<>();
 
-    public DrivetrainIOHardware(RobotState robotState, SwerveDrivetrainConstants constants, SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>... moduleConstants) {
+    public DrivetrainIOHardware(RobotState robotState, SwerveDrivetrainConstants constants, @SuppressWarnings("unchecked") SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>... moduleConstants) {
         super(TalonFX::new, TalonFX::new, CANcoder::new, constants, moduleConstants);
         this.robotState = robotState;
 
@@ -134,7 +133,7 @@ public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CAN
             moduleInputUpdaters.get(i).update(moduleInputs[i], drivetrainInputs);
         }
 
-        // later on we adjust the pose estimator in robotState when added
+        robotState.addPoseObservation(drivetrainInputs.Timestamp, drivetrainInputs.Pose, fieldRelativeSpeeds, fieldRelativeSpeeds, drivetrainInputs.RawHeading.getDegrees(), drivetrainInputs.yawVelocityRadiansPerSecond, drivetrainInputs.yawAccelerationRadiansPerSecond2);
     }
 
     @Override

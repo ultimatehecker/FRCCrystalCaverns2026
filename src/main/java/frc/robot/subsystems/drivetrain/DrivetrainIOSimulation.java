@@ -1,12 +1,11 @@
 package frc.robot.subsystems.drivetrain;
 
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Kilogram;
+import static edu.wpi.first.units.Units.Kilograms;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Seconds;
 
 import java.util.function.Consumer;
 
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.Utils;
@@ -14,10 +13,8 @@ import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
-import com.google.flatbuffers.Constants;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -33,6 +30,8 @@ public class DrivetrainIOSimulation extends DrivetrainIOHardware {
     public MapleSimulatedSwerveDrivetrain mapleSimSwerveDrivetrain = null;
 
     private Notifier simNotifier = null;
+    
+    @SuppressWarnings("rawtypes")
     private final SwerveModuleConstants[] moduleConstants;
 
     private double lastSimTime;
@@ -42,7 +41,6 @@ public class DrivetrainIOSimulation extends DrivetrainIOHardware {
             return;
         }
 
-        // Override pose with MapleSim physics if enabled
         if (GlobalConstants.kUseMapleSim && mapleSimSwerveDrivetrain != null) {
             swerveDriveState.Pose = mapleSimSwerveDrivetrain.mapleSimDrive.getSimulatedDriveTrainPose();
         }
@@ -50,7 +48,7 @@ public class DrivetrainIOSimulation extends DrivetrainIOHardware {
         simulatedRobotState.addFieldToRobot(swerveDriveState.Pose);
     };
 
-    public DrivetrainIOSimulation(RobotState robotState, SimulatedRobotState simulatedRobotState, SwerveDrivetrainConstants constants, SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>... moduleConstants) {
+    public DrivetrainIOSimulation(RobotState robotState, SimulatedRobotState simulatedRobotState, SwerveDrivetrainConstants constants, @SuppressWarnings("unchecked") SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>... moduleConstants) {
         super(robotState, constants, moduleConstants);
 
         this.simulatedRobotState = simulatedRobotState;
@@ -74,13 +72,13 @@ public class DrivetrainIOSimulation extends DrivetrainIOHardware {
     public void startSimThread() {
         if (GlobalConstants.kUseMapleSim) {
             mapleSimSwerveDrivetrain = new MapleSimulatedSwerveDrivetrain(
-                Seconds.of(GlobalConstants.kLoopPeriodSeconds), 
-                DrivetrainConstants.kRobotMassKilograms, 
-                Inches.of(31), 
-                Inches.of(31), 
+                Seconds.of(GlobalConstants.kSimLoopPeriodSeconds), 
+                Kilograms.of(DrivetrainConstants.kRobotMassKilograms), 
+                Meters.of(DrivetrainConstants.kBumperLengthX), 
+                Meters.of(DrivetrainConstants.kBumperLengthY), 
                 DrivetrainConstants.kDriveSimulatedGearbox, 
                 DrivetrainConstants.kSteerSimulatedGearbox, 
-                1.2, 
+                DrivetrainConstants.kWheelCOF, 
                 getModuleLocations(), 
                 getPigeon2(), 
                 getModules(), 
