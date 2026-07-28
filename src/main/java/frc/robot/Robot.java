@@ -5,7 +5,6 @@
 package frc.robot;
 
 import org.littletonrobotics.junction.LogFileUtil;
-import org.littletonrobotics.junction.LoggedPowerDistribution;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
@@ -14,13 +13,12 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import com.ctre.phoenix6.SignalLogger;
 
-import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.GlobalConstants;
-import frc.robot.constants.GlobalConstants.RobotType;
 
 public class Robot extends LoggedRobot {
   private Command autonomousCommand;
