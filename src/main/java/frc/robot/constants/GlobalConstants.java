@@ -21,6 +21,7 @@ public class GlobalConstants {
     public static final MinoCANBus kRioBus = new MinoCANBus("rio");
 
     public static final double kLoopPeriodSeconds = 0.02;
+    public static final double kSimLoopPeriodSeconds = 0.005;
     private static RobotType kRobotType = RobotType.SIMBOT;
     public static final boolean kTuningMode = true;
 
