@@ -1,6 +1,7 @@
 plugins {
     id "java"
     id "edu.wpi.first.GradleRIO" version "2026.2.1"
+    id "com.peterabeles.gversion" version "1.10"
 }
 
 java {
@@ -95,6 +96,16 @@ dependencies {
 test {
     useJUnitPlatform()
     systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+}
+
+project.compileJava.dependsOn(createVersionFile)
+gversion {
+  srcDir = "src/main/java/"
+  classPackage = "frc.robot.constants"
+  className = "BuildConstants"
+  dateFormat = "yyyy-MM-dd HH:mm:ss z"
+  timeZone = "America/New_York"
+  indent = "  "
 }
 
 // Simulation configuration (e.g. environment variables).
