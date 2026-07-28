@@ -115,7 +115,7 @@ public class SimulationTunerConstants {
             .withSteerMotorClosedLoopOutput(kSteerClosedLoopOutput)
             .withDriveMotorClosedLoopOutput(kDriveClosedLoopOutput)
             .withSlipCurrent(kSlipCurrent)
-            .withSpeedAt12Volts(DrivetrainConstants.kMaximumLinearVelocity)
+            .withSpeedAt12Volts(MetersPerSecond.of(DrivetrainConstants.kMaximumLinearVelocityMetersPerSecond))
             .withDriveMotorType(kDriveMotorType)
             .withSteerMotorType(kSteerMotorType)
             .withFeedbackSource(kSteerFeedbackType)
