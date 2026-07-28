@@ -1,5 +1,8 @@
 package frc.robot.subsystems.drivetrain;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -28,7 +31,7 @@ import frc.minolib.phoenix.PhoenixUtility;
 import frc.robot.RobotState;
 
 public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> implements DrivetrainIO {
-    private RobotState robotState;
+    private final RobotState robotState;
     private final String[] moduleNames = {"Drivetrain/FL", "Drivetrain/FR", "Drivetrain/BL", "Drivetrain/BR"};
     private String[][] outputNames;
 
@@ -38,27 +41,35 @@ public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CAN
     private final StatusSignal<LinearAcceleration> accelerationY;
     private final StatusSignal<LinearAcceleration> accelerationZ;
 
+    @FunctionalInterface
+    private interface ModuleInputUpdater {
+        public void update(ModuleIOInputs moduleInputs, DrivetrainIOInputs drivetrainInputs);
+    }
+
+    private final Map<Integer, ModuleInputUpdater> moduleInputUpdaters = new HashMap<>();
+
     public DrivetrainIOHardware(RobotState robotState, SwerveDrivetrainConstants constants, SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>... moduleConstants) {
         super(TalonFX::new, TalonFX::new, CANcoder::new, constants, moduleConstants);
         this.robotState = robotState;
 
-        for (int i = 0 ; i < moduleNames.length; i++) {
-            var module = getModule(i);
+        for (int i = 0; i < moduleNames.length; i++) {
+            final int moduleNumber = i;
+
+            var module = getModule(moduleNumber);
 
             final TalonFX driveMotor = module.getDriveMotor();
             final TalonFX steerMotor = module.getSteerMotor();
 
-            StatusSignal<Current> driveSupplyCurrent = driveMotor.getSupplyCurrent();
-            StatusSignal<Current> driveStatorCurrent = driveMotor.getStatorCurrent();
-            StatusSignal<Voltage> driveAppliedVoltage = driveMotor.getMotorVoltage();
-            StatusSignal<Temperature> driveTemperature = driveMotor.getDeviceTemp();
+            StatusSignal<Current> driveSupplyCurrent = driveMotor.getSupplyCurrent(false);
+            StatusSignal<Current> driveStatorCurrent = driveMotor.getStatorCurrent(false);
+            StatusSignal<Voltage> driveAppliedVoltage = driveMotor.getMotorVoltage(false);
+            StatusSignal<Temperature> driveTemperature = driveMotor.getDeviceTemp(false);
 
-            StatusSignal<Angle> steerPosition = steerMotor.getPosition();
-            StatusSignal<AngularVelocity> steerVelocity = steerMotor.getVelocity();
-            StatusSignal<Current> steerSupplyCurrent = steerMotor.getSupplyCurrent();
-            StatusSignal<Current> steerStatorCurrent = steerMotor.getStatorCurrent();
-            StatusSignal<Voltage> steerAppliedVoltage = steerMotor.getMotorVoltage();
-            StatusSignal<Temperature> steerTemperature = steerMotor.getDeviceTemp();
+            StatusSignal<AngularVelocity> steerVelocity = steerMotor.getVelocity(false);
+            StatusSignal<Current> steerSupplyCurrent = steerMotor.getSupplyCurrent(false);
+            StatusSignal<Current> steerStatorCurrent = steerMotor.getStatorCurrent(false);
+            StatusSignal<Voltage> steerAppliedVoltage = steerMotor.getMotorVoltage(false);
+            StatusSignal<Temperature> steerTemperature = steerMotor.getDeviceTemp(false);
 
             BaseStatusSignal.setUpdateFrequencyForAll(
                 250.0, 
@@ -66,8 +77,6 @@ public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CAN
                 driveStatorCurrent,
                 driveAppliedVoltage,
                 driveTemperature,
-                steerPosition,
-                steerVelocity,
                 steerSupplyCurrent,
                 steerStatorCurrent,
                 steerAppliedVoltage,
@@ -80,13 +89,27 @@ public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CAN
                 driveStatorCurrent,
                 driveAppliedVoltage,
                 driveTemperature,
-                steerPosition,
-                steerVelocity,
                 steerSupplyCurrent,
                 steerStatorCurrent,
                 steerAppliedVoltage,
                 steerTemperature
-            );   
+            );
+
+            moduleInputUpdaters.put(moduleNumber, (moduleInputs, drivetrainInputs) -> {
+                moduleInputs.driveConnected = BaseStatusSignal.isAllGood(driveSupplyCurrent, driveStatorCurrent, driveAppliedVoltage, driveTemperature);
+                moduleInputs.driveSupplyCurrentAmperes = driveSupplyCurrent.getValueAsDouble();
+                moduleInputs.driveStatorCurrentAmperes = driveStatorCurrent.getValueAsDouble();
+                moduleInputs.driveAppliedVoltage = driveAppliedVoltage.getValueAsDouble();
+                moduleInputs.driveTemperatureCelsius = driveTemperature.getValueAsDouble();
+
+                moduleInputs.steerConnected = BaseStatusSignal.isAllGood(steerVelocity, steerSupplyCurrent, steerStatorCurrent, steerAppliedVoltage, steerTemperature);
+                moduleInputs.steerPosition = drivetrainInputs.ModuleStates[moduleNumber].angle;
+                moduleInputs.steerVelocity = Units.rotationsToRadians(steerVelocity.getValueAsDouble());
+                moduleInputs.steerSupplyCurrentAmperes = steerSupplyCurrent.getValueAsDouble();
+                moduleInputs.steerStatorCurrentAmperes = steerStatorCurrent.getValueAsDouble();
+                moduleInputs.steerAppliedVoltage = steerAppliedVoltage.getValueAsDouble();
+                moduleInputs.steerTemperatureCelsius = steerTemperature.getValueAsDouble();
+            });
         }
 
         angularYawVelocity = getPigeon2().getAngularVelocityZWorld();
@@ -99,20 +122,19 @@ public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CAN
     }
 
     @Override
-    public void updateInputs(DrivetrainIOInputs inputs) {
-        inputs.fromSwerveDriveState(this.getState());
+    public void updateInputs(DrivetrainIOInputs drivetrainInputs, ModuleIOInputs... moduleInputs) {
+        drivetrainInputs.fromSwerveDriveState(this.getState());
 
-        inputs.yawVelocityRadiansPerSecond = Units.degreesToRadians(angularYawVelocity.getValueAsDouble());
-        inputs.yawAccelerationRadiansPerSecond2 = accelerationZ.getValueAsDouble() * 9.8067;
+        drivetrainInputs.yawVelocityRadiansPerSecond = Units.degreesToRadians(angularYawVelocity.getValueAsDouble());
+        drivetrainInputs.yawAccelerationRadiansPerSecond2 = accelerationZ.getValueAsDouble() * 9.8067;
 
-        ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(inputs.Speeds, inputs.Pose.getRotation());
+        ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(drivetrainInputs.Speeds, drivetrainInputs.Pose.getRotation());
+
+        for (int i = 0; i < moduleNames.length; i++) {
+            moduleInputUpdaters.get(i).update(moduleInputs[i], drivetrainInputs);
+        }
 
         // later on we adjust the pose estimator in robotState when added
-    }
-
-    @Override
-    public void updateModuleInputs(ModuleIOInputs... inputs) {
-
     }
 
     @Override
@@ -157,7 +179,7 @@ public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CAN
     }
 
     @Override
-    public void resetToParamaterizedRotation(Rotation2d rotation2d) {
+    public void resetToParameterizedRotation(Rotation2d rotation2d) {
         this.resetRotation(rotation2d);
     }
 }
