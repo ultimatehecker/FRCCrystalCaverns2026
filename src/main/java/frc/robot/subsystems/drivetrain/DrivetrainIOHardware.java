@@ -20,13 +20,15 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
-
+import frc.minolib.localization.WeightedPoseEstimate;
 import frc.minolib.phoenix.PhoenixUtility;
+import frc.minolib.wpilib.RobotTime;
 import frc.robot.RobotState;
 
 public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> implements DrivetrainIO {
@@ -34,7 +36,12 @@ public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CAN
     private final String[] moduleNames = {"Drivetrain/FL", "Drivetrain/FR", "Drivetrain/BL", "Drivetrain/BR"};
     private String[][] outputNames;
 
+    private final StatusSignal<Angle> pitch;
+    private final StatusSignal<Angle> roll;
+
     private final StatusSignal<AngularVelocity> angularYawVelocity;
+    private final StatusSignal<AngularVelocity> angularPitchVelocity;
+    private final StatusSignal<AngularVelocity> angularRollVelocity;
 
     private final StatusSignal<LinearAcceleration> accelerationX;
     private final StatusSignal<LinearAcceleration> accelerationY;
@@ -111,13 +118,19 @@ public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CAN
             });
         }
 
+        pitch = getPigeon2().getPitch();
+        roll = getPigeon2().getRoll();
+
         angularYawVelocity = getPigeon2().getAngularVelocityZWorld();
+        angularPitchVelocity = getPigeon2().getAngularVelocityYWorld();
+        angularRollVelocity = getPigeon2().getAngularVelocityXWorld();
+
         accelerationX = getPigeon2().getAccelerationX();
         accelerationY = getPigeon2().getAccelerationY();
         accelerationZ = getPigeon2().getAccelerationZ();
 
-        BaseStatusSignal.setUpdateFrequencyForAll(250.0, angularYawVelocity, accelerationX, accelerationY, accelerationZ);
-        PhoenixUtility.registerSignals(true, angularYawVelocity, accelerationX, accelerationY, accelerationZ);
+        BaseStatusSignal.setUpdateFrequencyForAll(250.0, pitch, roll, angularYawVelocity, angularPitchVelocity, angularRollVelocity, accelerationX, accelerationY, accelerationZ);
+        PhoenixUtility.registerSignals(true, pitch, roll, angularYawVelocity, angularPitchVelocity, angularRollVelocity, accelerationX, accelerationY, accelerationZ);
     }
 
     @Override
@@ -127,13 +140,36 @@ public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CAN
         drivetrainInputs.yawVelocityRadiansPerSecond = Units.degreesToRadians(angularYawVelocity.getValueAsDouble());
         drivetrainInputs.yawAccelerationRadiansPerSecond2 = accelerationZ.getValueAsDouble() * 9.8067;
 
-        ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(drivetrainInputs.Speeds, drivetrainInputs.Pose.getRotation());
-
         for (int i = 0; i < moduleNames.length; i++) {
             moduleInputUpdaters.get(i).update(moduleInputs[i], drivetrainInputs);
         }
 
-        robotState.addPoseObservation(drivetrainInputs.Timestamp, drivetrainInputs.Pose, fieldRelativeSpeeds, fieldRelativeSpeeds, drivetrainInputs.RawHeading.getDegrees(), drivetrainInputs.yawVelocityRadiansPerSecond, drivetrainInputs.yawAccelerationRadiansPerSecond2);
+        ChassisSpeeds measuredRobotRelativeChassisSpeeds = getKinematics().toChassisSpeeds(drivetrainInputs.ModuleStates);
+        ChassisSpeeds measuredFieldRelativeChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(measuredRobotRelativeChassisSpeeds, drivetrainInputs.Pose.getRotation());
+        ChassisSpeeds desiredRobotRelativeChassisSpeeds = getKinematics().toChassisSpeeds(drivetrainInputs.ModuleTargets);
+        ChassisSpeeds desiredFieldRelativeChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(desiredRobotRelativeChassisSpeeds, drivetrainInputs.Pose.getRotation());
+ 
+        ChassisSpeeds fusedFieldRelativeChassisSpeeds = new ChassisSpeeds(
+            measuredFieldRelativeChassisSpeeds.vxMetersPerSecond,
+            measuredFieldRelativeChassisSpeeds.vyMetersPerSecond,
+            drivetrainInputs.yawVelocityRadiansPerSecond
+        );
+
+        robotState.addDriveMotionMeasurements(
+            RobotTime.getTimestampSeconds(),
+            drivetrainInputs.yawVelocityRadiansPerSecond,
+            angularPitchVelocity.getValueAsDouble(),
+            angularRollVelocity.getValueAsDouble(),
+            pitch.getValueAsDouble(),
+            roll.getValueAsDouble(),
+            accelerationX.getValueAsDouble(),
+            accelerationY.getValueAsDouble(),
+            desiredRobotRelativeChassisSpeeds,
+            desiredFieldRelativeChassisSpeeds,
+            measuredRobotRelativeChassisSpeeds,
+            measuredFieldRelativeChassisSpeeds,
+            fusedFieldRelativeChassisSpeeds
+        );
     }
 
     @Override
@@ -180,5 +216,10 @@ public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CAN
     @Override
     public void resetToParameterizedRotation(Rotation2d rotation2d) {
         this.resetRotation(rotation2d);
+    }
+
+    @Override
+    public void addVisionMeasurement(WeightedPoseEstimate poseEstimate) {
+        this.addVisionMeasurement(poseEstimate.getVisionRobotPoseMeters(), poseEstimate.getTimestampSeconds(), poseEstimate.getVisionMeasurementStdDevs());
     }
 }
