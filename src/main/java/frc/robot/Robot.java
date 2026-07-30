@@ -18,7 +18,8 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-
+import frc.minolib.advantagekit.LoggedTracer;
+import frc.minolib.phoenix.PhoenixUtility;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.GlobalConstants;
 
@@ -65,7 +66,13 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
+    LoggedTracer.reset();
+
+    PhoenixUtility.refreshAll();
+    LoggedTracer.record("PhoenixRefresh");
+
     CommandScheduler.getInstance().run();
+    LoggedTracer.record("Commands");
 
     if (RobotBase.isSimulation() && GlobalConstants.kUseMapleSim) {
       robotContainer.getSimulatedRobotState().updateSim();
