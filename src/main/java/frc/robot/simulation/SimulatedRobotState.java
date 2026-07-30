@@ -8,17 +8,17 @@ import frc.robot.RobotContainer;
 
 public class SimulatedRobotState {
     private SwerveDriveSimulation simulatedDrivetrain;
-    private final RobotContainer container;
+    private final RobotContainer robotContainer;
     private double lastTimestamp = 0.0;
 
     private Pose2d fieldToRobotSimulatedTruth = Pose2d.kZero;
 
     public SimulatedRobotState(RobotContainer robotContainer) {
-        this.container = robotContainer;
+        this.robotContainer = robotContainer;
     }
 
     public void init() {
-        this.simulatedDrivetrain = this.container.getDrivetrain().getMapleSimDrive().mapleSimDrive;
+        this.simulatedDrivetrain = robotContainer.getDrivetrain().getMapleSimDrive().mapleSimDrive;
     }
 
     public synchronized void addFieldToRobot(Pose2d pose) {
