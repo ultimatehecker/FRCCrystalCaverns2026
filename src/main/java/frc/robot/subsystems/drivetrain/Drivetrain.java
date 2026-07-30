@@ -1,5 +1,6 @@
 package frc.robot.subsystems.drivetrain;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -12,9 +13,13 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+
+import frc.minolib.controller.ControllerConstants;
+import frc.minolib.localization.WeightedPoseEstimate;
 import frc.minolib.swerve.MapleSimulatedSwerveDrivetrain;
 import frc.robot.RobotState;
 import frc.robot.constants.DrivetrainConstants;
@@ -86,11 +91,19 @@ public class Drivetrain extends SubsystemBase {
         Logger.recordOutput("Drivetrain/IsStopped?", stopped);
     }
 
-    public Command drive(DoubleSupplier velocityXMetersPerSecond, DoubleSupplier velocityYMetersPerSecond, DoubleSupplier omegaRadiansPerSecond) {
-        return run(() -> applyRequest(teleopRequest
-            .withVelocityX(velocityXMetersPerSecond.getAsDouble())
-            .withVelocityY(velocityYMetersPerSecond.getAsDouble())
-            .withRotationalRate(omegaRadiansPerSecond.getAsDouble()))).withName("Standard Teloeop Drive");
+    public Command drive(DoubleSupplier throttleSupplier, DoubleSupplier strafeSupplier, DoubleSupplier rotationSupplier, BooleanSupplier isFieldCentric) {
+        return run(() -> {
+            ChassisSpeeds speeds = calculateSpeedsBasedOnJoystickInputs(throttleSupplier, strafeSupplier, rotationSupplier);
+
+            if (isFieldCentric.getAsBoolean()) {
+                applyRequest(teleopRequest
+                    .withVelocityX(speeds.vxMetersPerSecond)
+                    .withVelocityY(speeds.vyMetersPerSecond)
+                    .withRotationalRate(speeds.omegaRadiansPerSecond));
+            } else {
+                applyRequest(robotSpeedsRequest.withSpeeds(speeds));
+            }
+        }).withName("Standard Teloeop Drive");
     }
 
     public Command driveFacingAngle(DoubleSupplier velocityXMetersPerSecond, DoubleSupplier velocityYMetersPerSecond, Supplier<Rotation2d> targetHeading) {
@@ -116,8 +129,16 @@ public class Drivetrain extends SubsystemBase {
         io.setSwerveRequest(request);
     }
 
+    public void addVisionMeasurement(WeightedPoseEstimate poseEstimate) {
+        io.addVisionMeasurement(poseEstimate);
+    }
+
     public void resetPose(Pose2d pose) {
         io.resetPose(pose);
+    }
+
+    public void resetRotationBasedOnAlliance() {
+        io.resetRotation();
     }
 
     public MapleSimulatedSwerveDrivetrain getMapleSimDrive() {
@@ -125,5 +146,26 @@ public class Drivetrain extends SubsystemBase {
             return simIo.getMapleSimDrive();
         }
         return null;
+    }
+
+    private ChassisSpeeds calculateSpeedsBasedOnJoystickInputs(DoubleSupplier throttle, DoubleSupplier strafe, DoubleSupplier omega) {
+        if (DriverStation.getAlliance().isEmpty()) {
+            return new ChassisSpeeds(0, 0, 0);
+        }
+
+        double magnitudeX = MathUtil.applyDeadband(throttle.getAsDouble(), ControllerConstants.kControllerDeadband);
+        double magnitudeY = MathUtil.applyDeadband(strafe.getAsDouble(), ControllerConstants.kControllerDeadband);
+        double magnitudeTheta = MathUtil.applyDeadband(omega.getAsDouble(), ControllerConstants.kControllerDeadband);
+
+        double velocityX = magnitudeX * DrivetrainConstants.kMaximumLinearVelocityMetersPerSecond;
+        double velocityY = magnitudeY * DrivetrainConstants.kMaximumLinearVelocityMetersPerSecond;
+        double velocityTheta = magnitudeTheta * DrivetrainConstants.kMaximumRotationalVelocityRadiansPerSecond;
+
+        Rotation2d skewCompensationFactor = Rotation2d.fromRadians(robotState.getLatestMeasuredRobotRelativeChassisSpeeds().omegaRadiansPerSecond * -0.03);
+
+        return ChassisSpeeds.fromRobotRelativeSpeeds(
+            ChassisSpeeds.fromFieldRelativeSpeeds(new ChassisSpeeds(velocityX, velocityY, velocityTheta), robotState.getLatestFieldToRobot().getValue().getRotation()), 
+            robotState.getLatestFieldToRobot().getValue().getRotation().plus(skewCompensationFactor)
+        );
     }
 }
