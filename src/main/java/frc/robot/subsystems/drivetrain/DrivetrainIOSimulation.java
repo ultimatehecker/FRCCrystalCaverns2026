@@ -99,7 +99,7 @@ public class DrivetrainIOSimulation extends DrivetrainIOHardware {
             });
         }
 
-        simNotifier.startPeriodic(GlobalConstants.kLoopPeriodSeconds);
+        simNotifier.startPeriodic(GlobalConstants.kSimLoopPeriodSeconds);
     }
 
     @Override
