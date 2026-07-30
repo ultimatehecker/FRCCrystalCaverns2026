@@ -89,7 +89,7 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    drivetrain.setDefaultCommand(drivetrain.drive(controlboard::getThrottle, controlboard::getStrafe, controlboard::getRotation, new Trigger(null)));
+    drivetrain.setDefaultCommand(drivetrain.drive(controlboard::getThrottle, controlboard::getStrafe, controlboard::getRotation, () -> true));
   }
 
   public Command getAutonomousCommand() {

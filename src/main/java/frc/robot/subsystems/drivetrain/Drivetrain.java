@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
+import frc.minolib.advantagekit.LoggedTracer;
 import frc.minolib.controller.ControllerConstants;
 import frc.minolib.localization.WeightedPoseEstimate;
 import frc.minolib.swerve.MapleSimulatedSwerveDrivetrain;
@@ -89,6 +90,7 @@ public class Drivetrain extends SubsystemBase {
             MathUtil.isNear(0.0, inputs.Speeds.omegaRadiansPerSecond, DrivetrainConstants.kStoppedRotationalTolerenceRadiansPerSecond);
 
         Logger.recordOutput("Drivetrain/IsStopped?", stopped);
+        LoggedTracer.record("DrivetrainPeriodic");
     }
 
     public Command drive(DoubleSupplier throttleSupplier, DoubleSupplier strafeSupplier, DoubleSupplier rotationSupplier, BooleanSupplier isFieldCentric) {
