@@ -8,17 +8,16 @@ import java.util.function.Consumer;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+
 import frc.minolib.localization.WeightedPoseEstimate;
 import frc.robot.constants.DrivetrainConstants;
 import frc.robot.constants.GlobalConstants;
 import frc.robot.io.Controlboard;
 import frc.robot.simulation.SimulatedRobotState;
-import frc.robot.subsystems.drivetrain.CompetitionTunerConstants;
+import frc.robot.subsystems.drivetrain.TunerConstants;
 import frc.robot.subsystems.drivetrain.Drivetrain;
 import frc.robot.subsystems.drivetrain.DrivetrainIOHardware;
 import frc.robot.subsystems.drivetrain.DrivetrainIOSimulation;
-import frc.robot.subsystems.drivetrain.SimulationTunerConstants;
 
 public class RobotContainer {
   private final Consumer<WeightedPoseEstimate> visionEstimateConsumer = new Consumer<WeightedPoseEstimate>() {
@@ -50,9 +49,9 @@ public class RobotContainer {
   @SuppressWarnings("unchecked")
   public Drivetrain buildDrivetrain() {
     if (Robot.isSimulation()) {
-      return new Drivetrain(robotState, new DrivetrainIOSimulation(robotState, simulatedRobotState, DrivetrainConstants.kDrivetrain.getDriveTrainConstants(), SimulationTunerConstants.kFrontLeft, SimulationTunerConstants.kFrontRight, SimulationTunerConstants.kBackLeft, SimulationTunerConstants.kBackRight));
+      return new Drivetrain(robotState, new DrivetrainIOSimulation(robotState, simulatedRobotState, DrivetrainConstants.kDrivetrain.getDriveTrainConstants(), TunerConstants.kFrontLeft, TunerConstants.kFrontRight, TunerConstants.kBackLeft, TunerConstants.kBackRight));
     } else {
-      return new Drivetrain(robotState, new DrivetrainIOHardware(robotState, DrivetrainConstants.kDrivetrain.getDriveTrainConstants(), CompetitionTunerConstants.kFrontLeft, CompetitionTunerConstants.kFrontRight, CompetitionTunerConstants.kBackLeft, CompetitionTunerConstants.kBackRight));
+      return new Drivetrain(robotState, new DrivetrainIOHardware(robotState, DrivetrainConstants.kDrivetrain.getDriveTrainConstants(), TunerConstants.kFrontLeft, TunerConstants.kFrontRight, TunerConstants.kBackLeft, TunerConstants.kBackRight));
     }
   }
 
@@ -66,10 +65,6 @@ public class RobotContainer {
 
   public Drivetrain getDrivetrain() {
     return drivetrain;
-  }
-
-  public Controlboard getControlboard() {
-    return controlboard;
   }
 
   public RobotContainer() {

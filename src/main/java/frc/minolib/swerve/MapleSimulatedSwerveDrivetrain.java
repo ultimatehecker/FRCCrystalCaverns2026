@@ -161,8 +161,7 @@ public class MapleSimulatedSwerveDrivetrain {
     }
 
     public static class TalonFXMotorControllerWithRemoteCanCoderSim extends TalonFXMotorControllerSim {
-        @SuppressWarnings("unused")
-        private final int encoderId;
+        @SuppressWarnings("unused") private final int encoderId;
         private final CANcoderSimState remoteCancoderSimState;
 
         public TalonFXMotorControllerWithRemoteCanCoderSim(TalonFX talonFX, CANcoder cancoder) {
@@ -223,7 +222,7 @@ public class MapleSimulatedSwerveDrivetrain {
             .withDriveMotorInverted(false) // Disable motor inversions for drive and steer motors
             .withSteerMotorInverted(false)
             .withEncoderInverted(false) // Disable CanCoder inversion
-            .withSteerMotorGains(moduleConstants .SteerMotorGains.withKP(70).withKD(4.5)) // Adjust steer motor PID gains for simulation
+            .withSteerMotorGains(moduleConstants .SteerMotorGains.withKP(70).withKD(4)) // Adjust steer motor PID gains for simulation
             .withDriveFrictionVoltage(Volts.of(0.1)) // Adjust friction voltages
             .withSteerFrictionVoltage(Volts.of(0.15))
             .withSteerInertia(KilogramSquareMeters.of(0.05)); // Adjust steer inertia
