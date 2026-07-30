@@ -4,9 +4,15 @@
 
 package frc.robot;
 
+import java.util.function.Consumer;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.minolib.localization.WeightedPoseEstimate;
 import frc.robot.constants.DrivetrainConstants;
+import frc.robot.constants.GlobalConstants;
+import frc.robot.io.Controlboard;
 import frc.robot.simulation.SimulatedRobotState;
 import frc.robot.subsystems.drivetrain.CompetitionTunerConstants;
 import frc.robot.subsystems.drivetrain.Drivetrain;
@@ -15,9 +21,31 @@ import frc.robot.subsystems.drivetrain.DrivetrainIOSimulation;
 import frc.robot.subsystems.drivetrain.SimulationTunerConstants;
 
 public class RobotContainer {
-  private Drivetrain drivetrain;
+  private final Consumer<WeightedPoseEstimate> visionEstimateConsumer = new Consumer<WeightedPoseEstimate>() {
+    @Override
+    public void accept(WeightedPoseEstimate estimate) {
+        drivetrain.addVisionMeasurement(estimate);
+    }
+  };
+
   private RobotState robotState;
   private SimulatedRobotState simulatedRobotState;
+
+  private Drivetrain drivetrain;
+
+  private Controlboard controlboard = new Controlboard();
+
+  public RobotState buildRobotState() {
+    return new RobotState(visionEstimateConsumer);
+  }
+
+  public SimulatedRobotState buildSimulatedRobotState() {
+    if (Robot.isSimulation()) {
+      return new SimulatedRobotState(this);
+    } else {
+      return null;
+    }
+  }
 
   @SuppressWarnings("unchecked")
   public Drivetrain buildDrivetrain() {
@@ -28,23 +56,41 @@ public class RobotContainer {
     }
   }
 
+  public RobotState getRobotState() {
+    return robotState;
+  }
+
+  public SimulatedRobotState getSimulatedRobotState() {
+    return simulatedRobotState;
+  }
+
   public Drivetrain getDrivetrain() {
     return drivetrain;
   }
 
-  public RobotContainer() {
-    robotState = new RobotState();
+  public Controlboard getControlboard() {
+    return controlboard;
+  }
 
-    if (Robot.isSimulation()) {
-      simulatedRobotState = new SimulatedRobotState(this);
-    }
+  public RobotContainer() {
+    robotState = buildRobotState();
+    simulatedRobotState = buildSimulatedRobotState();
 
     drivetrain = buildDrivetrain();
+
+    if (Robot.isSimulation()) {
+      if (GlobalConstants.kUseMapleSim) {
+        assert this.simulatedRobotState != null;
+        this.simulatedRobotState.init();
+      }
+    }
 
     configureBindings();
   }
 
-  private void configureBindings() {}
+  private void configureBindings() {
+    drivetrain.setDefaultCommand(drivetrain.drive(controlboard::getThrottle, controlboard::getStrafe, controlboard::getRotation, new Trigger(null)));
+  }
 
   public Command getAutonomousCommand() {
     return Commands.print("No autonomous command configured");
