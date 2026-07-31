@@ -58,9 +58,10 @@ public class Robot extends LoggedRobot {
         break;
     }
 
-    SignalLogger.setPath("/media/sda1/");
-
     LiveWindow.disableAllTelemetry();
+
+    SignalLogger.setPath("/media/sda1/");
+    SignalLogger.enableAutoLogging(false);
     Logger.start();
   }
 
@@ -74,9 +75,7 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().run();
     LoggedTracer.record("Commands");
 
-    if (RobotBase.isSimulation() && GlobalConstants.kUseMapleSim) {
-      robotContainer.getSimulatedRobotState().updateSim();
-    }
+    robotContainer.getRobotState().updateLogger();
   }
 
   @Override
@@ -132,6 +131,8 @@ public class Robot extends LoggedRobot {
   @Override
   public void simulationPeriodic() {
     if (RobotBase.isSimulation() && GlobalConstants.kUseMapleSim) {
+      robotContainer.getSimulatedRobotState().updateSim();
+
       Logger.recordOutput("FieldSimulation/Fuel", SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
     }
   }
