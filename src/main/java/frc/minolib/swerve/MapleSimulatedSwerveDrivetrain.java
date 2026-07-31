@@ -222,7 +222,7 @@ public class MapleSimulatedSwerveDrivetrain {
             .withDriveMotorInverted(false) // Disable motor inversions for drive and steer motors
             .withSteerMotorInverted(false)
             .withEncoderInverted(false) // Disable CanCoder inversion
-            .withSteerMotorGains(moduleConstants .SteerMotorGains.withKP(70).withKD(4)) // Adjust steer motor PID gains for simulation
+            .withSteerMotorGains(moduleConstants .SteerMotorGains.withKP(26).withKD(1.375).withKV(0.5)) // Adjust steer motor PID gains for simulation
             .withDriveFrictionVoltage(Volts.of(0.1)) // Adjust friction voltages
             .withSteerFrictionVoltage(Volts.of(0.15))
             .withSteerInertia(KilogramSquareMeters.of(0.05)); // Adjust steer inertia
