@@ -1,0 +1,76 @@
+{
+  "name": "Crystal Caverns",
+  "isFTC": false,
+  "coordinateSystem": "wall-blue",
+  "rotations": [
+    {
+      "axis": "x",
+      "degrees": 90
+    },
+    {
+      "axis": "z",
+      "degrees": 180
+    }
+  ],
+  "widthInches": 648.00,
+  "heightInches": 324.00,
+  "defaultOrigin": "blue",
+  "driverStations": [
+    [
+      -8.27,
+      3.144
+    ],
+    [
+      -8.27,
+      -0.26
+    ],
+    [
+      -8.27,
+      -2.088
+    ],
+    [
+      8.27,
+      -2.088
+    ],
+    [
+      8.27,
+      -0.26
+    ],
+    [
+      8.27,
+      3.144
+    ]
+  ],
+  "gamePieces": [
+    {
+      "name": "Crystal",
+      "rotations": [
+        {
+          "axis": "x",
+          "degrees": 90
+        }
+      ],
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "stagedObjects": []
+    },
+    {
+      "name": "Gemstone",
+      "rotations": [
+        {
+          "axis": "x",
+          "degrees": 90
+        }
+      ],
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "stagedObjects": []
+    }
+  ]
+}
