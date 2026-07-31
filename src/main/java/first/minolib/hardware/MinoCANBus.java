@@ -64,10 +64,13 @@ public class MinoCANBus {
 
         private final int index;
         private final String name;
+        private final Alert refreshAlert;
 
         CANBusLane(int index, final String name) {
             this.index = index;
             this.name = name;
+
+            refreshAlert = new Alert("Failed to refresh signals on SystemCore CAN lane " + name, Level.HIGH);
         }
 
         public int getBusNumber() {
@@ -76,6 +79,10 @@ public class MinoCANBus {
 
         public String getBusName() {
             return name;
+        }
+
+        public Alert getAlert() {
+            return refreshAlert;
         }
     }
 
