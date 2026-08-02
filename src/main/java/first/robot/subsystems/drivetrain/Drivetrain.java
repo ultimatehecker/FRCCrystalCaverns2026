@@ -80,6 +80,9 @@ public class Drivetrain extends Mechanism {
 
     private final ChassisVelocities zeroChassisVelocities = new ChassisVelocities(0, 0, 0);
 
+    private boolean isFieldCentric = true;
+    private boolean fieldCentricPreviousState = false;
+
     public Drivetrain(RobotState robotState, DrivetrainIO io) {
         this.robotState = robotState;
         this.io = io;
@@ -103,7 +106,13 @@ public class Drivetrain extends Mechanism {
         return runRepeatedly(() -> {
             ChassisVelocities speeds = calculateSpeedsBasedOnJoystickInputs(throttleSupplier, strafeSupplier, rotationSupplier);
 
-            if (isFieldCentric.getAsBoolean()) {
+            if (isFieldCentric.getAsBoolean() && !fieldCentricPreviousState) {
+                this.isFieldCentric = !this.isFieldCentric;
+            }
+
+            fieldCentricPreviousState = isFieldCentric.getAsBoolean();
+
+            if (this.isFieldCentric) {
                 applyRequest(teleopRequestFC
                     .withVelocityX(speeds.vx)
                     .withVelocityY(speeds.vy)
