@@ -8,15 +8,16 @@ import org.wpilib.units.measure.MomentOfInertia;
 
 import first.minolib.swerve.CTRESwerveDrivetrainConstants;
 import first.minolib.swerve.SwerveModuleType;
+import first.robot.Robot;
 import first.robot.subsystems.drivetrain.TunerConstants;
 
 public class DrivetrainConstants {
     public static final SwerveModuleType kSwerveModuleType = SwerveModuleType.MK4N_L2;
 
-    public static final double kMaximumLinearVelocityMetersPerSecond = 4.4;
-    public static final double kMaximumLinearAccelerationMetersPerSecond2 = 6.0;
+    public static final double kMaximumLinearVelocityMetersPerSecond = 4.22;
+    public static final double kMaximumLinearAccelerationMetersPerSecond2 = 7.83;
     public static final double kMaximumRotationalVelocityRadiansPerSecond = 5 * Math.PI;
-    public static final double kMaximumRotationalAccelerationRadiansPerSecond2 = 6 * Math.PI;
+    public static final double kMaximumRotationalAccelerationRadiansPerSecond2 = 10 * Math.PI;
 
     public static final double dP = 10.0;
     public static final double dI = 0.0;
@@ -63,6 +64,18 @@ public class DrivetrainConstants {
     public static final MomentOfInertia kRobotMOI = MomentOfInertia.ofBaseUnits(6.883, KilogramSquareMeters);
     public static final MomentOfInertia kSwerveModuleSteerMOI = MomentOfInertia.ofBaseUnits(0.02, KilogramSquareMeters);
     public static final double kWheelCOF = 1.0;
+
+    public static final double kDriveHolonomickP = Robot.isSimulation() ? 5.0 : 0.0;
+    public static final double kDriveHolonomickI = Robot.isSimulation() ? 0.0 : 0.0;
+    public static final double kDriveHolonomickD = Robot.isSimulation() ? 0.0 : 0.0;
+    public static final double kDriveHolonomicMaxVelocity = Robot.isSimulation() ? kMaximumLinearVelocityMetersPerSecond : 0.0;
+    public static final double kDriveHolonomicMaxAcceleration = Robot.isSimulation() ? kMaximumLinearAccelerationMetersPerSecond2 : 0.0;
+
+    public static final double kRotationalHolonomickP = Robot.isSimulation() ? 5.0 : 0.0;
+    public static final double kRotationalHolonomickI = Robot.isSimulation() ? 0.0 : 0.0;
+    public static final double kRotationalHolonomickD = Robot.isSimulation() ? 0.0 : 0.0;
+    public static final double kRotationalHolonomicMaxVelocity = Robot.isSimulation() ? kMaximumRotationalVelocityRadiansPerSecond : 0.0;
+    public static final double kRotationalHolonomicMaxAcceleration = Robot.isSimulation() ? kMaximumRotationalAccelerationRadiansPerSecond2 : 0.0;
 
     public static final CTRESwerveDrivetrainConstants kDrivetrain = TunerConstants.instantateConstants();
 }

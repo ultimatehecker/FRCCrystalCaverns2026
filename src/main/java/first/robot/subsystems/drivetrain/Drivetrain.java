@@ -9,15 +9,19 @@ import org.littletonrobotics.junction.Logger;
 import org.wpilib.command3.Command;
 import org.wpilib.command3.Mechanism;
 import org.wpilib.driverstation.MatchState;
+import org.wpilib.math.controller.ProfiledPIDController;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.math.trajectory.TrapezoidProfile;
 import org.wpilib.math.util.MathUtil;
 
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import first.minolib.advantagekit.LoggedTracer;
+import first.minolib.advantagekit.LoggedTunableNumber;
 import first.minolib.vision.FieldPoseEstimation;
 import first.robot.RobotState;
 import first.robot.constants.ControllerConstants;
@@ -30,6 +34,18 @@ public class Drivetrain extends Mechanism {
     private final DrivetrainIOInputsAutoLogged inputs = new DrivetrainIOInputsAutoLogged();
 
     private final String[] moduleNames = {"Drivetrain/FL", "Drivetrain/FR", "Drivetrain/BL", "Drivetrain/BR"};
+
+    private static final LoggedTunableNumber drivekP = new LoggedTunableNumber("Drivetrain/DriveToPose/Drive/kP", DrivetrainConstants.kDriveHolonomickP);
+    private static final LoggedTunableNumber drivekI = new LoggedTunableNumber("Drivetrain/DriveToPose/Drive/kI", DrivetrainConstants.kDriveHolonomickI);
+    private static final LoggedTunableNumber drivekD = new LoggedTunableNumber("Drivetrain/DriveToPose/Drive/kD", DrivetrainConstants.kDriveHolonomickD);
+    private static final LoggedTunableNumber driveMaxVelocity = new LoggedTunableNumber("Drivetrain/DriveToPose/Drive/Max Velocity", DrivetrainConstants.kDriveHolonomicMaxVelocity);
+    private static final LoggedTunableNumber driveMaxAcceleration = new LoggedTunableNumber("Drivetrain/DriveToPose/Drive/Max Acceleration", DrivetrainConstants.kDriveHolonomicMaxAcceleration);
+
+    private static final LoggedTunableNumber rotkP = new LoggedTunableNumber("Drivetrain/DriveToPose/Rotation/kP", DrivetrainConstants.kRotationalHolonomickP);
+    private static final LoggedTunableNumber rotkI = new LoggedTunableNumber("Drivetrain/DriveToPose/Rotation/kI", DrivetrainConstants.kRotationalHolonomickI);
+    private static final LoggedTunableNumber rotkD = new LoggedTunableNumber("Drivetrain/DriveToPose/Rotation/kD", DrivetrainConstants.kRotationalHolonomickD);
+    private static final LoggedTunableNumber rotMaxVelocity = new LoggedTunableNumber("Drivetrain/DriveToPose/Rotation/Max Velocity", DrivetrainConstants.kRotationalHolonomicMaxVelocity);
+    private static final LoggedTunableNumber rotMaxAcceleration = new LoggedTunableNumber("Drivetrain/DriveToPose/Rotation/Max Acceleration", DrivetrainConstants.kRotationalHolonomicMaxAcceleration);
 
     private final ModuleIOInputsAutoLogged[] moduleInputs = new ModuleIOInputsAutoLogged[] { 
         new ModuleIOInputsAutoLogged(), 
@@ -101,6 +117,92 @@ public class Drivetrain extends Mechanism {
                 );
             }
         }).withPriority(Command.LOWEST_PRIORITY).named("Standard Teleop Drive");
+    }
+
+    public Command driveToPose(Supplier<Pose2d> targetSupplier, Supplier<Pose2d> robotSupplier) {
+        return run(coroutine -> {
+            ProfiledPIDController translationController = new ProfiledPIDController(
+                drivekP.get(),
+                drivekI.get(),
+                drivekD.get(),
+                new TrapezoidProfile.Constraints(
+                    driveMaxVelocity.get(),
+                    driveMaxAcceleration.get()
+                )
+            );
+
+            ProfiledPIDController rotationController = new ProfiledPIDController(
+                rotkP.get(),
+                rotkI.get(),
+                rotkD.get(),
+                new TrapezoidProfile.Constraints(
+                    rotMaxVelocity.get(),
+                    rotMaxAcceleration.get()
+                )
+            );
+
+            rotationController.enableContinuousInput(-Math.PI, Math.PI);
+
+            Pose2d targetPose = targetSupplier.get();
+            Pose2d currentPose = robotSupplier.get();
+            ChassisVelocities currentSpeeds = inputs.Velocity;
+
+            Translation2d translationError = targetPose.minus(currentPose).getTranslation();
+            Rotation2d directionToTarget = translationError.getAngle();
+
+            double velocityTowardTarget = currentSpeeds.vx * directionToTarget.getCos() + currentSpeeds.vy * directionToTarget.getSin();
+
+            translationController.reset(translationError.getNorm(), -velocityTowardTarget);
+            rotationController.reset(currentPose.getRotation().getRadians(), currentSpeeds.omega);
+
+            while (true) {
+                 if (drivekP.hasChanged(hashCode()) || drivekI.hasChanged(hashCode()) || drivekD.hasChanged(hashCode())) {
+                    translationController.setPID(drivekP.get(), drivekI.get(), drivekD.get());
+                }
+
+                if (rotkP.hasChanged(hashCode()) || rotkI.hasChanged(hashCode()) || rotkD.hasChanged(hashCode())) {
+                    rotationController.setPID(rotkP.get(), rotkI.get(), rotkD.get());
+                }
+
+                if (driveMaxVelocity.hasChanged(hashCode()) || driveMaxAcceleration.hasChanged(hashCode())) {
+                    translationController.setConstraints(
+                            new TrapezoidProfile.Constraints(driveMaxVelocity.get(), driveMaxAcceleration.get()));
+                }
+
+                if (rotMaxVelocity.hasChanged(hashCode()) || rotMaxAcceleration.hasChanged(hashCode())) {
+                    rotationController.setConstraints(new TrapezoidProfile.Constraints(rotMaxVelocity.get(), rotMaxAcceleration.get()));
+                }
+
+                targetPose = targetSupplier.get();
+                currentPose = robotSupplier.get();
+
+                translationError = targetPose.minus(currentPose).getTranslation();
+                directionToTarget = translationError.getAngle();
+
+                double translationOutput = translationController.calculate(translationError.getNorm(), 0.0);
+                double rotationOutput = rotationController.calculate(currentPose.getRotation().getRadians(), targetPose.getRotation().getRadians());
+
+                Translation2d translationVelocity = new Translation2d(-translationOutput, directionToTarget);
+
+                applyRequest(robotVelocityRequest.withVelocity(
+                    new ChassisVelocities(
+                        translationVelocity.getX(),
+                        translationVelocity.getY(),
+                        rotationOutput
+                    )
+                ));
+
+                Logger.recordOutput("DriveToPose/Target Pose", targetPose);
+                Logger.recordOutput("DriveToPose/Translation Output", translationOutput);
+                Logger.recordOutput("DriveToPose/Rotation Output", rotationOutput);
+                Logger.recordOutput("DriveToPose/Translation Error", translationError.getNorm());
+                Logger.recordOutput("DriveToPose/Rotation Error", targetPose.getRotation().minus(currentPose.getRotation()).getRadians());
+                Logger.recordOutput("DriveToPose/Translation Velocity", translationVelocity);
+                Logger.recordOutput("DriveToPose/Direction to Target", directionToTarget);
+
+                coroutine.yield();
+            }
+        }).whenCanceled(this::stop).named("Drive To Pose");
     }
 
     public Command driveFacingAngle(DoubleSupplier fieldVelocityX, DoubleSupplier fieldVelocityY, Supplier<Rotation2d> targetHeadingSupplier) {
