@@ -5,7 +5,6 @@ import java.util.EnumMap;
 import java.util.function.Supplier;
 
 import org.wpilib.driverstation.Alert;
-import org.wpilib.driverstation.Alert.Level;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusCode;
