@@ -68,8 +68,12 @@ public class Robot extends LoggedRobot {
     PhoenixUtility.refreshAll();
     LoggedTracer.record("PhoenixRefresh");
 
+    robotContainer.getDrivetrain().periodic(); // TODO: Temporary for now because all Mechanisms will be scheduled at the same time (also will be adding VirtualMechanisms soon)
+
     Scheduler.getDefault().run();
     LoggedTracer.record("Scheduler");
+
+    robotContainer.getRobotState().updateLogger();
   }
 
   @Override
