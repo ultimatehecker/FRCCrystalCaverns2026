@@ -185,3 +185,6 @@ compile_commands.json
 
 # Eclipse generated file for annotation processors
 .factorypath
+
+# gversion generated BuildConstants
+src/main/java/first/BuildConstants.java

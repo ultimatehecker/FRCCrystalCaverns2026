@@ -2,6 +2,7 @@ plugins {
     id "java"
     id "org.wpilib.GradleRIO" version "2027.0.0-alpha-6"
     id "com.gradleup.shadow" version "9.3.0"
+    id "com.peterabeles.gversion" version "1.10"
 }
 
 java {
@@ -85,6 +86,16 @@ dependencies {
 
     def akitJson = new groovy.json.JsonSlurper().parseText(new File(projectDir.getAbsolutePath() + "/vendordeps/AdvantageKit.json").text)
     annotationProcessor "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
+}
+
+project.compileJava.dependsOn(createVersionFile)
+gversion {
+  srcDir = "src/main/java"
+  classPackage = "first"
+  className = "BuildConstants"
+  dateFormat = "yyyy-MM-dd HH:mm:ss z"
+  timeZone = "America/New_York" // Use preferred time zone
+  indent = "  "
 }
 
 test {
