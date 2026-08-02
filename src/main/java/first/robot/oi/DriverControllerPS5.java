@@ -39,6 +39,11 @@ public class DriverControllerPS5 implements DriverControllerIO {
 
     @Override
     public Trigger resetGyro() {
-        return controller.touchpad();
-    }  
+        return controller.touchpad(); //TODO: Fix these buttons
+    }
+
+    @Override
+    public Trigger toggleDrivingMode() {
+        return controller.PS(); //TODO: Fix these buttons
+    }
 }

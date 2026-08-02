@@ -28,4 +28,8 @@ public class DriverController {
     public Trigger resetGyro() {
         return io.resetGyro();
     }
+
+    public boolean toggleDrivingMode() {
+        return io.toggleDrivingMode().getAsBoolean();
+    }
 }

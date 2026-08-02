@@ -12,4 +12,6 @@ public interface DriverControllerIO {
     public double getRotationY();
 
     public Trigger resetGyro();
+
+    public Trigger toggleDrivingMode();
 }

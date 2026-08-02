@@ -40,5 +40,10 @@ public class DriverControllerXbox implements DriverControllerIO {
     @Override
     public Trigger resetGyro() {
         return controller.back().and(controller.start().negate());
-    }   
+    }
+
+    @Override
+    public Trigger toggleDrivingMode() {
+        return controller.start();
+    }
 }
