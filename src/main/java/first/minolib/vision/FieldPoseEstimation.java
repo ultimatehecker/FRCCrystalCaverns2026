@@ -11,7 +11,6 @@ public class FieldPoseEstimation {
     private final Pose2d visionRobotPoseMeters;
     private final double timestampSeconds;
     private final Matrix<N3, N1> visionMeasurementStdDevs;
-    private final int numTags;
 
     /**
      * Creates a new vision field pose estimate.
@@ -19,14 +18,12 @@ public class FieldPoseEstimation {
      * @param visionRobotPoseMeters The estimated robot pose on the field in meters
      * @param timestampSeconds The timestamp when this estimate was captured
      * @param visionMeasurementStdDevs Standard deviations representing measurement uncertainty
-     * @param numTags Number of AprilTags used in this pose estimate
      */
     
-    public FieldPoseEstimation(Pose2d visionRobotPoseMeters, double timestampSeconds, Matrix<N3, N1> visionMeasurementStdDevs, int numTags) {
+    public FieldPoseEstimation(Pose2d visionRobotPoseMeters, double timestampSeconds, Matrix<N3, N1> visionMeasurementStdDevs) {
         this.visionRobotPoseMeters = visionRobotPoseMeters;
         this.timestampSeconds = timestampSeconds;
         this.visionMeasurementStdDevs = visionMeasurementStdDevs;
-        this.numTags = numTags;
     }
 
     public Pose2d getVisionRobotPoseMeters() {
@@ -39,9 +36,5 @@ public class FieldPoseEstimation {
 
     public Matrix<N3, N1> getVisionMeasurementStdDevs() {
         return visionMeasurementStdDevs;
-    }
-
-    public int getNumTags() {
-        return numTags;
     }
 }
