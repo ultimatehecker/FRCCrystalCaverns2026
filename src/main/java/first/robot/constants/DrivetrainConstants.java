@@ -28,7 +28,8 @@ public class DrivetrainConstants {
 
     public static final boolean kDriveMotorInverted = false;
     public static final double kDriveMotorReduction = kSwerveModuleType.getDriveReduction();
-    public static final double kDriveMotorSupplyCurrentLimit = 120;
+    public static final double kDriveMotorStatorCurrentLimit = 120;
+    public static final double kDriveMotorSupplyCurrentLimit = 70;
     public static final DCMotor kDriveSimulatedGearbox = DCMotor.getKrakenX60Foc(1);
 
     public static final double sP = 100.0;
@@ -40,14 +41,15 @@ public class DrivetrainConstants {
 
     public static final boolean kSteerMotorInverted = true;
     public static final double kSteerMotorReduction = kSwerveModuleType.getSteerReduction();
-    public static final double kSteerMotorStatorCurrentLimit = 60;
+    public static final double kSteerMotorStatorCurrentLimit = 70;
+    public static final double kSteerMotorSupplyCurrentLimit = 40;
     public static final DCMotor kSteerSimulatedGearbox = DCMotor.getKrakenX44Foc(1);
 
     public static final double kWheelRadius = 0.0482;
-    public static final double kTrackWidth = 0.55245;
-    public static final double kWheelBase = 0.55245;
-    public static final double kBumperLengthY = 0.7874;
-    public static final double kBumperLengthX = 0.7874;
+    public static final double kTrackWidth = 0.5588;
+    public static final double kWheelBase = 0.6096;
+    public static final double kBumperLengthY = 0.8636;
+    public static final double kBumperLengthX = 0.9144;
     public static final double kDriveBaseRadius = Math.hypot(kTrackWidth / 2.0, kWheelBase / 2.0);
     public static final Translation2d[] kModuleTranslations = new Translation2d[] {
         new Translation2d(kTrackWidth / 2.0, kWheelBase / 2.0),
@@ -60,7 +62,7 @@ public class DrivetrainConstants {
     public static final double kStoppedRotationalTolerenceRadiansPerSecond = 0.05;
     
     public static final double kRobotMassKilograms = 67.5;
-    public static final double kRobotCOGHeightMeters = 0.15;
+    public static final double kRobotCOGHeightMeters = 0.127;
     public static final MomentOfInertia kRobotMOI = MomentOfInertia.ofBaseUnits(6.883, KilogramSquareMeters);
     public static final MomentOfInertia kSwerveModuleSteerMOI = MomentOfInertia.ofBaseUnits(0.02, KilogramSquareMeters);
     public static final double kWheelCOF = 1.0;
