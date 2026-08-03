@@ -158,7 +158,7 @@ public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CAN
         );
 
         robotState.addDriveMotionMeasurements(
-            Timer.getTimestamp(),
+            Timer.getMonotonicTimestamp(),
             drivetrainInputs.yawVelocityRadiansPerSecond,
             Units.degreesToRadians(angularPitchVelocity.getValueAsDouble()),
             Units.degreesToRadians(angularRollVelocity.getValueAsDouble()),
@@ -184,11 +184,11 @@ public class DrivetrainIOHardware extends SwerveDrivetrain<TalonFX, TalonFX, CAN
             outputNames = new String[4][5];
             for (int i = 0; i < getModules().length; i++) {
                 outputNames[i] = new String[5];
-                outputNames[i][0] = moduleNames[i] + " Absolute Encoder Angle";
-                outputNames[i][1] = moduleNames[i] + " Steering Angle";
-                outputNames[i][2] = moduleNames[i] + " Target Steering Angle";
-                outputNames[i][3] = moduleNames[i] + " Drive Velocity";
-                outputNames[i][4] = moduleNames[i] + " Target Drive Velocity";
+                outputNames[i][0] = moduleNames[i] + " /Absolute Encoder Angle";
+                outputNames[i][1] = moduleNames[i] + " /Steering Angle";
+                outputNames[i][2] = moduleNames[i] + " /Target Steering Angle";
+                outputNames[i][3] = moduleNames[i] + " /Drive Velocity";
+                outputNames[i][4] = moduleNames[i] + " /Target Drive Velocity";
             }
         }
         for (int i = 0; i < getModules().length; i++) {
