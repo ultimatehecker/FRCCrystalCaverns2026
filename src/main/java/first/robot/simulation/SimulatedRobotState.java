@@ -16,7 +16,7 @@ public class SimulatedRobotState {
     }
 
     public synchronized void addFieldToRobot(Pose2d pose) {
-        updateRobotPoseIfNewer(Timer.getTimestamp(), pose); //TODO: Check whether getTimestamp() is compareable to getFGPATimestamp()
+        updateRobotPoseIfNewer(Timer.getMonotonicTimestamp(), pose);
     }
 
     public synchronized Pose2d getLatestFieldToRobot() {
@@ -24,7 +24,7 @@ public class SimulatedRobotState {
     }
 
     public synchronized void updateSim() {
-        lastTimestamp = Timer.getTimestamp(); //TODO: Check whether getTimestamp() is compareable to getFGPATimestamp()
+        lastTimestamp = Timer.getMonotonicTimestamp();
     }
 
     private void updateRobotPoseIfNewer(double timestamp, Pose2d pose) {

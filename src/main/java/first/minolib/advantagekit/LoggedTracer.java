@@ -9,12 +9,12 @@ public class LoggedTracer {
 
     /** Reset the clock. */
     public static void reset() {
-        startTime = Timer.getTimestamp(); //TODO: Check whether getTimestamp() is compareable to getFGPATimestamp()
+        startTime = Timer.getMonotonicTimestamp();
     }
 
     /** Save the time elapsed since the last reset or record. */
     public static void record(String epochName) {
-        double now = Timer.getTimestamp(); //TODO: Check whether getTimestamp() is compareable to getFGPATimestamp()
+        double now = Timer.getMonotonicTimestamp();
         Logger.recordOutput("LoggedTracer/" + epochName + "MS", (now - startTime) * 1000.0);
         startTime = now;
     }
