@@ -129,7 +129,6 @@ public class DrivetrainConstants {
         }
 
         private static Translation2d getBlueCaveEdgePoint(Rotation2d outwardDirection) {
-
             double directionRadians = outwardDirection.getRadians();
             double faceSpacingRadians = Math.PI / 4.0;
             double firstFaceNormalRadians = Math.PI / 8.0;
@@ -143,6 +142,14 @@ public class DrivetrainConstants {
             return FieldConstants.kBlueCaveOrigin.plus(new Translation2d(centerToEdgeDistance, outwardDirection));
         }
 
+        private static Pose2d createBlueCaveAlignmentPose(Rotation2d outwardDirection) {
+            Translation2d caveEdgePoint = getBlueCaveEdgePoint(outwardDirection);
+            Translation2d robotCenter = caveEdgePoint.plus(new Translation2d(kBumperLengthX / 2.0, outwardDirection));
+            Rotation2d robotHeading = outwardDirection.plus(Rotation2d.k180deg);
+
+            return new Pose2d(robotCenter, robotHeading);
+        }
+
         public static List<Pose2d> getCaveAlignmentPoses(CaveTarget target, boolean isRedAlliance) {
             List<Rotation2d> blueApproachDirections = getBlueCaveApproachDirections(target);
 
@@ -150,16 +157,6 @@ public class DrivetrainConstants {
                 .map(AutoAlignConstants::createBlueCaveAlignmentPose)
                 .map(pose -> getPoseForAlliance(pose, isRedAlliance))
                 .toList();
-        }
-
-        private static Pose2d createBlueCaveAlignmentPose(Rotation2d outwardDirection) {
-            Translation2d caveEdgePoint = getBlueCaveEdgePoint(outwardDirection);
-            Translation2d robotCenter = caveEdgePoint.plus(new Translation2d(kBumperLengthX / 2.0, outwardDirection));
-
-            Rotation2d robotHeading =
-                    outwardDirection.plus(Rotation2d.k180deg);
-
-            return new Pose2d(robotCenter, robotHeading);
         }
 
         public static Pose2d getJewelryAlignmentPose(boolean isRedAlliance) {
