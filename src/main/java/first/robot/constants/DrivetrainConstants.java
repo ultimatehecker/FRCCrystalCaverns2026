@@ -2,10 +2,17 @@ package first.robot.constants;
 
 import static org.wpilib.units.Units.KilogramSquareMeters;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.math.util.Units;
 import org.wpilib.units.measure.MomentOfInertia;
 
+import first.minolib.math.MathUtility;
 import first.minolib.swerve.CTRESwerveDrivetrainConstants;
 import first.minolib.swerve.SwerveModuleType;
 import first.robot.Robot;
@@ -80,4 +87,104 @@ public class DrivetrainConstants {
     public static final double kRotationalHolonomicMaxAcceleration = Robot.isSimulation() ? kMaximumRotationalAccelerationRadiansPerSecond2 : 0.0;
 
     public static final CTRESwerveDrivetrainConstants kDrivetrain = TunerConstants.instantateConstants();
+
+    public class AutoAlignConstants {
+        public enum CaveTarget {
+            LOW,
+            HIGH,
+            GEMSTONE
+        }
+
+        public enum ClassifierTarget {
+            LOWER,
+            UPPER
+        }
+
+        /* These are temporary for now, the actual offsets will be computed when other subsystems are further programmed (these are good temp)*/
+        public static final double kLowerClassifierBumperGap = Units.inchesToMeters(6.0);
+        public static final double kUpperClassifierBumperGap = Units.inchesToMeters(12.0);
+        public static final double kJewelryBumperGap = Units.inchesToMeters(6.0);
+
+        private static final double kCaveCircumradius = FieldConstants.kBlueCaveOrigin.getDistance(FieldConstants.kBlueCaveVertices[0]);
+        private static final double kCaveApothem = kCaveCircumradius * Math.cos(Math.PI / 8.0);
+
+        public static Pose2d getPoseForAlliance(Pose2d bluePose, boolean isRedAlliance) {
+            if (!isRedAlliance) {
+                return bluePose;
+            }
+
+            return new Pose2d(FieldConstants.kFieldLength - bluePose.getX(), bluePose.getY(), Rotation2d.k180deg.minus(bluePose.getRotation()));
+        }
+
+        private static List<Rotation2d> getBlueCaveApproachDirections(CaveTarget target) {
+            Translation2d[] referencePoints = switch (target) {
+                case LOW -> FieldConstants.kBlueLowerBranches;
+                case HIGH -> FieldConstants.kBlueUpperBranches;
+                case GEMSTONE -> FieldConstants.kBlueLowerBranches;
+            };
+
+            return Arrays.stream(referencePoints)
+                .map(referencePoint -> referencePoint.minus(FieldConstants.kBlueCaveOrigin).getAngle())
+                .toList();
+        }
+
+        private static Translation2d getBlueCaveEdgePoint(Rotation2d outwardDirection) {
+
+            double directionRadians = outwardDirection.getRadians();
+            double faceSpacingRadians = Math.PI / 4.0;
+            double firstFaceNormalRadians = Math.PI / 8.0;
+
+            long nearestFaceIndex = Math.round((directionRadians - firstFaceNormalRadians) / faceSpacingRadians);
+
+            double nearestFaceNormalRadians = firstFaceNormalRadians + nearestFaceIndex * faceSpacingRadians;
+            double differenceFromFaceNormal = MathUtility.constrainAngleNegPiToPi(directionRadians - nearestFaceNormalRadians);
+            double centerToEdgeDistance = kCaveApothem / Math.cos(differenceFromFaceNormal);
+
+            return FieldConstants.kBlueCaveOrigin.plus(new Translation2d(centerToEdgeDistance, outwardDirection));
+        }
+
+        public static List<Pose2d> getCaveAlignmentPoses(CaveTarget target, boolean isRedAlliance) {
+            List<Rotation2d> blueApproachDirections = getBlueCaveApproachDirections(target);
+
+            return blueApproachDirections.stream()
+                .map(AutoAlignConstants::createBlueCaveAlignmentPose)
+                .map(pose -> getPoseForAlliance(pose, isRedAlliance))
+                .toList();
+        }
+
+        private static Pose2d createBlueCaveAlignmentPose(Rotation2d outwardDirection) {
+            Translation2d caveEdgePoint = getBlueCaveEdgePoint(outwardDirection);
+            Translation2d robotCenter = caveEdgePoint.plus(new Translation2d(kBumperLengthX / 2.0, outwardDirection));
+
+            Rotation2d robotHeading =
+                    outwardDirection.plus(Rotation2d.k180deg);
+
+            return new Pose2d(robotCenter, robotHeading);
+        }
+
+        public static Pose2d getJewelryAlignmentPose(boolean isRedAlliance) {
+            double jewelryRadiusAlongX = FieldConstants.kCenterOrigin.getDistance(FieldConstants.kJewelryVertices[0]);
+            double jewelryCenterToRobotCenter = jewelryRadiusAlongX + kJewelryBumperGap + (kBumperLengthX / 2.0);
+
+            Pose2d blueAlignmentPose = new Pose2d(FieldConstants.kCenterOrigin.getX() - jewelryCenterToRobotCenter, FieldConstants.kFieldWidth / 2.0, Rotation2d.kZero);
+
+            return getPoseForAlliance(blueAlignmentPose, isRedAlliance);
+        }
+
+        public static Pose2d getClassifierAlignmentPose(Pose2d blueClassifierFaceCenter, ClassifierTarget target, boolean isRedAlliance) {
+            double bumperGap = switch (target) {
+                case LOWER -> kLowerClassifierBumperGap;
+                case UPPER -> kUpperClassifierBumperGap;
+            };
+
+            Rotation2d outwardDirection = blueClassifierFaceCenter.getRotation();
+
+            double faceToRobotCenter = bumperGap + (kBumperLengthX / 2.0);
+            Translation2d robotCenter = blueClassifierFaceCenter.getTranslation().plus(new Translation2d(faceToRobotCenter, outwardDirection));
+
+            Rotation2d robotHeading = outwardDirection.plus(Rotation2d.k180deg);
+
+            return getPoseForAlliance(new Pose2d(robotCenter, robotHeading), isRedAlliance);
+        }
+    }
 }
