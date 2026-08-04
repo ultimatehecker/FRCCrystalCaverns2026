@@ -7,6 +7,7 @@ package first.robot;
 import java.util.function.Consumer;
 
 import org.wpilib.command3.Command;
+import org.wpilib.driverstation.internal.DriverStationBackend;
 
 import first.minolib.vision.FieldPoseEstimation;
 import first.robot.constants.DrivetrainConstants;
@@ -78,7 +79,8 @@ public class RobotContainer {
     drivetrain = buildDrivetrain();
 
     controller = buildDriverController();
-
+    
+    DriverStationBackend.silenceJoystickConnectionWarning(Robot.isSimulation());
     configureButtonBindings();
   }
 
