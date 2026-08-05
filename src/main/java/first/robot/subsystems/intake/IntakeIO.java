@@ -21,7 +21,5 @@ public interface IntakeIO {
 
     public void setVelocity(double setpoint);
 
-    public void setTorqueCurrent(double setpoint);
-
     public void stop();
 }
