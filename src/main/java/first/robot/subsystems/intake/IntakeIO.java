@@ -22,4 +22,6 @@ public interface IntakeIO {
     public void setVelocity(double setpoint);
 
     public void stop();
+
+    public default void setBrakeMode(boolean enabled) {}
 }
