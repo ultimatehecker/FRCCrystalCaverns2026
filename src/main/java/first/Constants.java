@@ -4,10 +4,16 @@ import org.wpilib.driverstation.Alert;
 import org.wpilib.driverstation.Alert.Level;
 import org.wpilib.framework.RobotBase;
 
+import first.minolib.hardware.MinoCANBus;
+import first.minolib.hardware.MinoCANBus.CANBusLane;
+
 public class Constants {
     public static final int kLoopBackTimeSeconds = 1;
     public static final double kLoopPeriodSeconds = 0.02;
     public static final double kSimLoopPeriodSeconds = 0.005;
+
+    public static final MinoCANBus kS0 = new MinoCANBus(CANBusLane.S0);
+    public static final MinoCANBus kS1 = new MinoCANBus(CANBusLane.S1);
 
     private static RobotType kRobotType = RobotType.SIMBOT;
     public static final boolean kTuningMode = true;
