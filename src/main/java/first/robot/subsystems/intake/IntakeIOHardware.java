@@ -39,6 +39,7 @@ public class IntakeIOHardware implements IntakeIO {
     private final StatusSignal<Current> supplyCurrent;
     private final StatusSignal<Voltage> appliedVoltage;
     private final StatusSignal<Temperature> temperature;
+    private final StatusSignal<Boolean> temperatureFault;
 
     private final VoltageOut voltageRequest = new VoltageOut(0.0)
         .withEnableFOC(true)
@@ -83,11 +84,12 @@ public class IntakeIOHardware implements IntakeIO {
         supplyCurrent = motor.getSupplyCurrent();
         appliedVoltage = motor.getMotorVoltage();
         temperature = motor.getDeviceTemp();
+        temperatureFault = motor.getFault_DeviceTemp();
 
-        tryUntilOk(5, () -> BaseStatusSignal.setUpdateFrequencyForAll(250.0, position, velocity, acceleration, statorCurrent, supplyCurrent, appliedVoltage, temperature));
+        tryUntilOk(5, () -> BaseStatusSignal.setUpdateFrequencyForAll(250.0, position, velocity, acceleration, statorCurrent, supplyCurrent, appliedVoltage, temperature, temperatureFault));
         tryUntilOk(5, () -> motor.optimizeBusUtilization(0.0, 0.25));
 
-        PhoenixUtility.registerSignals(CANBusLane.S1, position, velocity, acceleration, statorCurrent, supplyCurrent, appliedVoltage, temperature);
+        PhoenixUtility.registerSignals(CANBusLane.S1, position, velocity, acceleration, statorCurrent, supplyCurrent, appliedVoltage, temperature, temperatureFault);
     }
 
     @Override
@@ -99,6 +101,7 @@ public class IntakeIOHardware implements IntakeIO {
         inputs.supplyCurrentAmperes = supplyCurrent.getValueAsDouble();
         inputs.appliedVoltage = appliedVoltage.getValueAsDouble();
         inputs.temperatureCelsius = temperature.getValueAsDouble();
+        inputs.temperatureFault = temperatureFault.getValue().booleanValue();
     }
 
     @Override

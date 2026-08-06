@@ -13,6 +13,7 @@ public interface IntakeIO {
         public double supplyCurrentAmperes = 0.0;
         public double appliedVoltage = 0.0;
         public double temperatureCelsius = 0.0;
+        public boolean temperatureFault = false;
     }
 
     public void updateInputs(IntakeIOInputs inputs);
