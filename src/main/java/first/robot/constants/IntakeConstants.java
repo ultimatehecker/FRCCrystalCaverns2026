@@ -25,4 +25,6 @@ public class IntakeConstants {
 
     public static final double kMotorStatorLimit = 100.0;
     public static final double kMotorSupplyLimit = 40.0;
+
+    public static final double kMOI = 0.1; // need to calculate this when I open CAD next
 }
